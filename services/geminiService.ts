@@ -2,13 +2,18 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Cocktail, MoodProfile, TastePreference } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const getCocktailRecommendations = async (
   temp: number,
   mood: MoodProfile,
   taste: TastePreference
 ): Promise<Cocktail[]> => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing API_KEY. Please set it in Vercel Environment Variables.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+
   const prompt = `You are a world-class mixologist. Recommend 3 cocktails based on:
     - Environment: ${temp}°C
     - Mood (Scale 0-100): Joy: ${mood.joy}, Energy: ${mood.energy}, Calm: ${mood.calm}
