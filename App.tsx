@@ -11,7 +11,8 @@ import {
   Droplets,
   Activity,
   Smile,
-  ThermometerSun
+  ThermometerSun,
+  AlertCircle
 } from 'lucide-react';
 import { GlassCard } from './components/GlassCard';
 import { Cocktail, WeatherInfo, MoodProfile, TastePreference } from './types';
@@ -20,6 +21,7 @@ import { getCocktailRecommendations } from './services/geminiService';
 const App: React.FC = () => {
   const [view, setView] = useState<'home' | 'results' | 'detail'>('home');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [weather, setWeather] = useState<WeatherInfo>({ temp: 22, condition: 'Clear', city: 'London' });
   
   const [mood, setMood] = useState<MoodProfile>({ joy: 65, energy: 40, calm: 75 });
@@ -32,7 +34,6 @@ const App: React.FC = () => {
       navigator.geolocation.getCurrentPosition((pos) => {
         setWeather({ temp: Math.round(18 + Math.random() * 10), condition: 'Gentle Breeze', city: 'Local' });
       }, () => {
-        // Fallback if permission denied
         setWeather({ temp: 24, condition: 'Clear Sky', city: 'M.LIN' });
       });
     }
@@ -40,12 +41,14 @@ const App: React.FC = () => {
 
   const handleRecommend = async () => {
     setLoading(true);
+    setError(null);
     try {
       const results = await getCocktailRecommendations(weather.temp, mood, taste);
       setRecommendations(results);
       setView('results');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err.message || "Failed to brew magic. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -121,13 +124,20 @@ const App: React.FC = () => {
               </GlassCard>
             </div>
           </section>
+
+          {error && (
+            <div className="flex items-center gap-3 p-4 bg-red-50/50 backdrop-blur-md border border-red-100 rounded-2xl text-red-800 text-xs animate-in fade-in slide-in-from-top-2">
+              <AlertCircle size={14} className="shrink-0" />
+              <p className="font-medium">{error}</p>
+            </div>
+          )}
         </main>
 
         <div className="flex justify-center mt-12 z-10">
           <button 
             onClick={handleRecommend}
             disabled={loading}
-            className="py-5 bg-stone-900 text-stone-50 rounded-full font-medium text-base flex items-center justify-center gap-3 active:scale-[0.96] transition-all shadow-xl w-full"
+            className={`py-5 text-stone-50 rounded-full font-medium text-base flex items-center justify-center gap-3 active:scale-[0.96] transition-all shadow-xl w-full ${loading ? 'bg-stone-400 cursor-not-allowed' : 'bg-stone-900 hover:bg-black'}`}
           >
             {loading ? <RefreshCcw className="animate-spin" size={18} /> : <><span>Enjoy</span> <ArrowRight size={16}/></>}
           </button>
