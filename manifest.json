@@ -1,0 +1,22 @@
+
+{
+  "name": "M.LIN - AI Mixology",
+  "short_name": "M.LIN",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fdfaf7",
+  "theme_color": "#fdfaf7",
+  "description": "Premium AI-driven mixology experience inspired by Wabi-sabi and iOS glassmorphism.",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=192&auto=format&fit=crop",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=512&auto=format&fit=crop",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

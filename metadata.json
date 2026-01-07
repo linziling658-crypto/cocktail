@@ -1,0 +1,7 @@
+{
+  "name": "SipSense - AI Mixology",
+  "description": "An iOS-style mixology app that recommends cocktails based on local temperature and your current mood using AI, featuring a beautiful glassmorphism design.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
