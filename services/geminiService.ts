@@ -7,25 +7,20 @@ export const getCocktailRecommendations = async (
   mood: MoodProfile,
   taste: TastePreference
 ): Promise<Cocktail[]> => {
-  console.log("Service: Starting recommendation with", { temp, mood, taste });
+  console.log("Service: Mixing recommendations...");
   
   const apiKey = process.env.API_KEY;
-  if (!apiKey || apiKey === "") {
-    console.error("Service Error: API_KEY is empty or undefined");
-    throw new Error("API_KEY_MISSING: 请在 Vercel 环境变量中配置 API_KEY，并重新部署项目。");
+  if (!apiKey) {
+    throw new Error("API_KEY_MISSING: Please configure the API_KEY in Vercel settings.");
   }
 
   const ai = new GoogleGenAI({ apiKey });
 
-  const prompt = `You are a professional mixologist. Recommend 3 specific cocktails for these conditions:
-    - Temperature: ${temp}°C
-    - User Mood Profile (0-100): Joy(${mood.joy}), Energy(${mood.energy}), Calm(${mood.calm})
-    - Preference: ${taste.abv} alcohol level, Sweetness level ${taste.sweetness}/5, Sourness level ${taste.sourness}/5.
-    
-    RULES:
-    1. Respond ONLY with a JSON array of objects.
-    2. Must be based on IBA standards.
-    3. Include name, description, matchScore, matchReason, abv, ingredients, calories, instructions, glassType, and flavorProfile.`;
+  const prompt = `You are a legendary IBA mixologist. Recommend 3 cocktails for these conditions:
+    - Environment: ${temp}°C
+    - Mood: Joy ${mood.joy}%, Energy ${mood.energy}%, Calm ${mood.calm}%
+    - Preference: ${taste.abv} alcohol, Sweetness ${taste.sweetness}/5, Sourness ${taste.sourness}/5.
+    Return ONLY a raw JSON array of objects.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -76,21 +71,17 @@ export const getCocktailRecommendations = async (
       }
     });
 
-    let text = response.text;
-    if (!text) throw new Error("AI_NO_RESPONSE: 模型没有返回任何内容");
+    const text = response.text;
+    if (!text) throw new Error("Empty response from AI.");
 
-    // 强力 JSON 提取
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    const cleanedText = jsonMatch ? jsonMatch[0] : text.replace(/```json/g, "").replace(/```/g, "").trim();
-    
-    const cocktails = JSON.parse(cleanedText);
+    const cocktails = JSON.parse(text);
     return cocktails.map((c: any) => ({
       ...c,
-      id: c.id || Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(36).substr(2, 9),
       image: `https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=1000&auto=format&fit=crop&sig=${encodeURIComponent(c.name)}`
     })).sort((a: any, b: any) => b.matchScore - a.matchScore);
   } catch (error: any) {
-    console.error("Gemini Service Error details:", error);
+    console.error("Mixology Failure:", error);
     throw error;
   }
 };
