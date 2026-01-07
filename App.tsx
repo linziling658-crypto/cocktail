@@ -30,6 +30,7 @@ const App: React.FC = () => {
   const [selectedCocktail, setSelectedCocktail] = useState<Cocktail | null>(null);
 
   useEffect(() => {
+    console.log("App mounted, checking environment...");
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((pos) => {
         setWeather({ temp: Math.round(18 + Math.random() * 10), condition: 'Gentle Breeze', city: 'Local' });
@@ -40,15 +41,18 @@ const App: React.FC = () => {
   }, []);
 
   const handleRecommend = async () => {
+    console.log("UI: Recommend button clicked");
     setLoading(true);
     setError(null);
     try {
       const results = await getCocktailRecommendations(weather.temp, mood, taste);
+      console.log("UI: Results received", results);
       setRecommendations(results);
       setView('results');
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Failed to brew magic. Please try again.");
+      console.error("UI Error Catch:", err);
+      // 捕获具体错误以便用户排查
+      setError(err.message || "未能连接到调酒大师。请检查网络或 API 配置。");
     } finally {
       setLoading(false);
     }
@@ -70,9 +74,8 @@ const App: React.FC = () => {
   if (view === 'home') {
     return (
       <div className="min-h-screen bg-[#fdfaf7] px-8 pt-20 pb-16 animate-fade-scale flex flex-col relative overflow-hidden">
-        {/* Background Decorative Blobs */}
-        <div className="absolute top-[-10%] left-[-15%] w-80 h-80 bg-stone-200/20 blur-[100px] rounded-full animate-float"></div>
-        <div className="absolute bottom-[15%] right-[-10%] w-96 h-96 bg-stone-100/30 blur-[120px] rounded-full animate-float" style={{ animationDelay: '4s' }}></div>
+        <div className="absolute top-[-10%] left-[-15%] w-80 h-80 bg-stone-200/20 blur-[100px] rounded-full animate-float pointer-events-none"></div>
+        <div className="absolute bottom-[15%] right-[-10%] w-96 h-96 bg-stone-100/30 blur-[120px] rounded-full animate-float pointer-events-none" style={{ animationDelay: '4s' }}></div>
 
         <header className="mb-14 flex justify-between items-start z-10">
           <div>
@@ -87,7 +90,7 @@ const App: React.FC = () => {
           </button>
         </header>
 
-        <main className="space-y-12 flex-1 z-10">
+        <main className="space-y-12 flex-1 z-10 overflow-y-auto no-scrollbar pb-10">
           <section className="space-y-6">
             <h2 className="text-[9px] font-bold uppercase tracking-[0.4em] text-stone-300 px-2">Vibration</h2>
             <div className="space-y-10 liquid-glass !p-10 rounded-[3rem]">
@@ -124,16 +127,16 @@ const App: React.FC = () => {
               </GlassCard>
             </div>
           </section>
+        </main>
 
+        <div className="flex flex-col items-center mt-6 z-20 space-y-4">
           {error && (
-            <div className="flex items-center gap-3 p-4 bg-red-50/50 backdrop-blur-md border border-red-100 rounded-2xl text-red-800 text-xs animate-in fade-in slide-in-from-top-2">
+            <div className="w-full flex items-center gap-3 p-4 bg-red-50/70 backdrop-blur-md border border-red-100 rounded-2xl text-red-800 text-[10px] animate-in fade-in slide-in-from-bottom-2">
               <AlertCircle size={14} className="shrink-0" />
               <p className="font-medium">{error}</p>
             </div>
           )}
-        </main>
-
-        <div className="flex justify-center mt-12 z-10">
+          
           <button 
             onClick={handleRecommend}
             disabled={loading}

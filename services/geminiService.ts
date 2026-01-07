@@ -7,22 +7,25 @@ export const getCocktailRecommendations = async (
   mood: MoodProfile,
   taste: TastePreference
 ): Promise<Cocktail[]> => {
+  console.log("Service: Starting recommendation with", { temp, mood, taste });
+  
   const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("API_KEY_MISSING: 请在 Vercel 环境变量中配置 API_KEY");
+  if (!apiKey || apiKey === "") {
+    console.error("Service Error: API_KEY is empty or undefined");
+    throw new Error("API_KEY_MISSING: 请在 Vercel 环境变量中配置 API_KEY，并重新部署项目。");
   }
 
   const ai = new GoogleGenAI({ apiKey });
 
-  const prompt = `You are a world-class mixologist. Recommend 3 cocktails based on:
-    - Environment: ${temp}°C
-    - Mood (Scale 0-100): Joy: ${mood.joy}, Energy: ${mood.energy}, Calm: ${mood.calm}
-    - Taste Preference: Alcohol Level: ${taste.abv}, Sweetness(1-5): ${taste.sweetness}, Sourness(1-5): ${taste.sourness}
+  const prompt = `You are a professional mixologist. Recommend 3 specific cocktails for these conditions:
+    - Temperature: ${temp}°C
+    - User Mood Profile (0-100): Joy(${mood.joy}), Energy(${mood.energy}), Calm(${mood.calm})
+    - Preference: ${taste.abv} alcohol level, Sweetness level ${taste.sweetness}/5, Sourness level ${taste.sourness}/5.
     
-    CRITICAL: 
-    1. References MUST be from the IBA (International Bartenders Association) official cocktail list.
-    2. Provide a valid JSON array only. No conversational text.
-    3. Ensure matchScore is 1-5.`;
+    RULES:
+    1. Respond ONLY with a JSON array of objects.
+    2. Must be based on IBA standards.
+    3. Include name, description, matchScore, matchReason, abv, ingredients, calories, instructions, glassType, and flavorProfile.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -35,7 +38,6 @@ export const getCocktailRecommendations = async (
           items: {
             type: Type.OBJECT,
             properties: {
-              id: { type: Type.STRING },
               name: { type: Type.STRING },
               description: { type: Type.STRING },
               matchScore: { type: Type.INTEGER },
@@ -75,19 +77,20 @@ export const getCocktailRecommendations = async (
     });
 
     let text = response.text;
-    if (!text) throw new Error("EMPTY_RESPONSE: AI 返回内容为空");
+    if (!text) throw new Error("AI_NO_RESPONSE: 模型没有返回任何内容");
 
-    // 清理可能存在的 Markdown 代码块标签
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    // 强力 JSON 提取
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    const cleanedText = jsonMatch ? jsonMatch[0] : text.replace(/```json/g, "").replace(/```/g, "").trim();
     
-    const cocktails = JSON.parse(text);
+    const cocktails = JSON.parse(cleanedText);
     return cocktails.map((c: any) => ({
       ...c,
       id: c.id || Math.random().toString(36).substr(2, 9),
       image: `https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=1000&auto=format&fit=crop&sig=${encodeURIComponent(c.name)}`
-    })).sort((a: Cocktail, b: Cocktail) => b.matchScore - a.matchScore);
+    })).sort((a: any, b: any) => b.matchScore - a.matchScore);
   } catch (error: any) {
-    console.error("Gemini Service Error:", error);
+    console.error("Gemini Service Error details:", error);
     throw error;
   }
 };
