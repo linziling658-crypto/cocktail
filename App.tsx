@@ -1,12 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  Cloud, 
   ArrowRight, 
   Bookmark, 
   Flame, 
   Wine,
-  Sparkles,
   ChevronLeft,
   Star,
   RefreshCcw,
@@ -33,6 +31,9 @@ const App: React.FC = () => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((pos) => {
         setWeather({ temp: Math.round(18 + Math.random() * 10), condition: 'Gentle Breeze', city: 'Local' });
+      }, () => {
+        // Fallback if permission denied
+        setWeather({ temp: 24, condition: 'Clear Sky', city: 'M.LIN' });
       });
     }
   }, []);
@@ -57,7 +58,7 @@ const App: React.FC = () => {
         <span className="opacity-50">{value}%</span>
       </div>
       <input 
-        type="range" value={value} onChange={(e) => onChange(parseInt(e.target.value))}
+        type="range" value={value} min="0" max="100" onChange={(e) => onChange(parseInt(e.target.value))}
         className="w-full"
       />
     </div>
@@ -72,7 +73,7 @@ const App: React.FC = () => {
 
         <header className="mb-14 flex justify-between items-start z-10">
           <div>
-            <h1 className="text-2xl font-bold serif text-stone-800 tracking-wider">M.LIN</h1>
+            <h1 className="text-xl font-bold serif text-stone-800 tracking-[0.2em]">M.LIN</h1>
             <p className="text-stone-400 font-medium text-[9px] uppercase tracking-[0.2em] mt-3 flex items-center gap-2 bg-white/30 backdrop-blur-xl px-4 py-2 rounded-full border border-white/40 w-fit shadow-sm">
               <ThermometerSun size={12} className="text-stone-300" />
               {weather.city} • {weather.temp}°C
@@ -99,7 +100,7 @@ const App: React.FC = () => {
               <GlassCard className="!p-6 space-y-4">
                 <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Strength</span>
                 <select 
-                  className="bg-transparent border-none text-stone-700 font-serif text-lg italic focus:ring-0 w-full p-0"
+                  className="bg-transparent border-none text-stone-700 font-serif text-lg italic focus:ring-0 w-full p-0 cursor-pointer"
                   value={taste.abv}
                   onChange={(e) => setTaste({...taste, abv: e.target.value as any})}
                 >
@@ -126,9 +127,9 @@ const App: React.FC = () => {
           <button 
             onClick={handleRecommend}
             disabled={loading}
-            className="py-5 px-12 bg-stone-900 text-stone-50 rounded-full font-medium text-base flex items-center justify-center gap-3 active:scale-[0.96] transition-all shadow-xl w-full"
+            className="py-5 bg-stone-900 text-stone-50 rounded-full font-medium text-base flex items-center justify-center gap-3 active:scale-[0.96] transition-all shadow-xl w-full"
           >
-            {loading ? <RefreshCcw className="animate-spin" size={20} /> : <><span>Enjoy</span> <ArrowRight size={18}/></>}
+            {loading ? <RefreshCcw className="animate-spin" size={18} /> : <><span>Enjoy</span> <ArrowRight size={16}/></>}
           </button>
         </div>
       </div>
@@ -137,10 +138,10 @@ const App: React.FC = () => {
 
   if (view === 'results') {
     return (
-      <div className="min-h-screen bg-[#fdfcfb] px-6 pt-16 animate-fade-scale flex flex-col relative">
+      <div className="min-h-screen bg-[#fdfcfb] px-6 pt-16 animate-fade-scale flex flex-col relative overflow-hidden">
         <div className="flex flex-col items-center mb-10 text-center space-y-4 z-10">
            <span className="text-[9px] uppercase font-bold tracking-[0.5em] text-stone-300">Synthesis</span>
-           <h2 className="text-4xl font-serif italic text-stone-800">Your Essence</h2>
+           <h2 className="text-3xl font-serif italic text-stone-800">Your Essence</h2>
            <div className="flex gap-4 text-[9px] text-stone-400 font-bold uppercase tracking-widest bg-white/40 backdrop-blur-2xl px-5 py-2.5 rounded-full border border-white/50 shadow-sm">
              <span>{weather.temp}°C</span>
              <span className="opacity-30">•</span>
@@ -161,7 +162,7 @@ const App: React.FC = () => {
               <GlassCard className="!p-0 border-none rounded-[2.5rem] overflow-hidden group">
                 <div className="flex h-52">
                   <div className="w-1/3 overflow-hidden">
-                    <img src={drink.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2000ms]" />
+                    <img src={drink.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2000ms]" alt={drink.name} />
                   </div>
                   <div className="flex-1 p-6 flex flex-col justify-between">
                     <div>
@@ -201,8 +202,8 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen animate-fade-scale bg-white overflow-y-auto">
-      <div className="h-[60vh] relative overflow-hidden">
-        <img src={selectedCocktail?.image} className="w-full h-full object-cover" />
+      <div className="h-[55vh] relative overflow-hidden">
+        <img src={selectedCocktail?.image} className="w-full h-full object-cover" alt={selectedCocktail?.name} />
         <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-white"></div>
         <button 
           onClick={() => setView('results')}
@@ -214,7 +215,7 @@ const App: React.FC = () => {
 
       <div className="px-10 -mt-24 relative space-y-16 pb-24 z-20">
         <div className="text-center space-y-4">
-          <h2 className="text-6xl font-black serif text-stone-900 tracking-tighter leading-none">{selectedCocktail?.name}</h2>
+          <h2 className="text-5xl font-black serif text-stone-900 tracking-tighter leading-none">{selectedCocktail?.name}</h2>
           <div className="flex justify-center items-center gap-5 text-[9px] font-bold uppercase tracking-[0.3em] text-stone-300">
              <span className="flex items-center gap-2"><Wine size={14}/> {selectedCocktail?.glassType}</span>
              <span className="w-1 h-1 rounded-full bg-stone-100"></span>
@@ -268,7 +269,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <button className="w-full py-8 bg-stone-900 text-stone-50 rounded-full font-bold shadow-2xl active:scale-[0.98] transition-all text-xl tracking-tight">
+        <button className="w-full py-7 bg-stone-900 text-stone-50 rounded-full font-bold shadow-2xl active:scale-[0.98] transition-all text-lg tracking-tight">
           Scribe to Journal
         </button>
       </div>
